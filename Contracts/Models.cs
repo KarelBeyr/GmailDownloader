@@ -19,4 +19,6 @@ public class EmbeddedEmail
 {
     public string ThreadId { get; set; }
     public string VectorBase64 { get; set; }
+
+    public List<float> Vector { get; set; }
 }

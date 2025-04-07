@@ -5,9 +5,11 @@ VisualStudioVersion = 17.9.34616.47
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GmailDownloader", "GmailDownloader\GmailDownloader.csproj", "{28AB83CB-D926-457E-9968-C5C54BF4D9A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailEmbedder", "EmailEmbedder\EmailEmbedder.csproj", "{A9E83BA2-4723-477F-88EE-96D40D2D9C7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmailEmbedder", "EmailEmbedder\EmailEmbedder.csproj", "{A9E83BA2-4723-477F-88EE-96D40D2D9C7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Contracts.csproj", "{6D038250-C591-4271-BEFB-D76481DA265C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Contracts", "Contracts\Contracts.csproj", "{6D038250-C591-4271-BEFB-D76481DA265C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{DCCDA02D-66B9-4854-B720-78C3ADC32557}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{6D038250-C591-4271-BEFB-D76481DA265C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D038250-C591-4271-BEFB-D76481DA265C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D038250-C591-4271-BEFB-D76481DA265C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCCDA02D-66B9-4854-B720-78C3ADC32557}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCCDA02D-66B9-4854-B720-78C3ADC32557}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCCDA02D-66B9-4854-B720-78C3ADC32557}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCCDA02D-66B9-4854-B720-78C3ADC32557}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
