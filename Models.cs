@@ -5,6 +5,7 @@ public class Thread
 {
     public string Subject { get; set; }
     public List<Email> Emails { get; set; } = new List<Email>();
+    public string ThreadId { get; set; }
 }
 
 public class Email

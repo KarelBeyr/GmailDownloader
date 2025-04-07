@@ -40,49 +40,55 @@ class Program
             ApplicationName = ApplicationName
         });
 
-        // 3) List thread IDs
-        var listRequest = service.Users.Threads.List("me");
-        listRequest.MaxResults = 10;  // for demo
-        var listResponse = listRequest.Execute();
+        // 3) Process each month in the desired range
+        int startYear = 2024;
+        int endYear = 2025;
 
-        if (listResponse.Threads == null)
+        // We'll go up to December of endYear or some other logic:
+        for (int year = startYear; year <= endYear; year++)
         {
-            Console.WriteLine("No threads found.");
-            return;
+            for (int month = 1; month <= 12; month++)
+            {
+                // If you want to stop at a certain date (e.g., current month), you can break out here
+                DateTime startOfMonth = new DateTime(year, month, 1);
+                DateTime nextMonth = startOfMonth.AddMonths(1);
+
+                // For example, if nextMonth is in the future, we can break
+                if (nextMonth > DateTime.Now)
+                {
+                    // skip or break, depending on your preference
+                    break;
+                }
+
+                // 3a) Build the Gmail date-based query
+                // Gmail needs YYYY/MM/DD. We'll do "after:startOfMonth, before:nextMonth"
+                // note that after is inclusive, before is exclusive
+                string afterString = startOfMonth.ToString("yyyy/MM/dd");
+                string beforeString = nextMonth.ToString("yyyy/MM/dd");
+                string query = $"after:{afterString} before:{beforeString}";
+
+                Console.WriteLine($"Processing {year}-{month:00} with query: {query}");
+
+                // 3b) Retrieve threads for this month
+                List<Thread> monthlyThreads = FetchThreadsByQuery(service, query);
+
+                // 3c) If we got results, serialize them to threads_YEAR-MONTH.json
+                if (monthlyThreads.Any())
+                {
+                    string fileName = $"threads_{year}-{month:00}.json";
+                    StoreThreads(monthlyThreads, fileName);
+                    Console.WriteLine($"Wrote {monthlyThreads.Count} threads to {fileName}");
+                }
+                else
+                {
+                    Console.WriteLine("No threads found this month.");
+                }
+            }
         }
+    }
 
-        // 4) For each thread, fetch minimal data to get message IDs
-        var allThreads = new List<Thread>();
-
-        foreach (var threadItem in listResponse.Threads)
-        {
-            // a) Get minimal thread to see its messages
-            var threadReq = service.Users.Threads.Get("me", threadItem.Id);
-            threadReq.Format = UsersResource.ThreadsResource.GetRequest.FormatEnum.Minimal;
-            var threadData = threadReq.Execute();
-
-            if (threadData.Messages == null)
-                continue;
-
-            // b) Now, fetch each message in raw format and parse with MimeKit
-            var customThread = BuildThreadFromMessages(service, threadData.Messages);
-            allThreads.Add(customThread);
-        }
-
-        Console.WriteLine($"Fetched {allThreads.Count} threads.");
-
-        //// 5) Demo output
-        //if (allThreads.Count > 0)
-        //{
-        //    var firstThread = allThreads[0];
-        //    Console.WriteLine("First thread subject: " + firstThread.Subject);
-        //    foreach (var email in firstThread.Emails)
-        //    {
-        //        Console.WriteLine($"    From: {email.From}, To: {email.To}, Time: {email.Timestamp}");
-        //        Console.WriteLine($"    Body snippet: {email.Body.Substring(0, Math.Min(email.Body.Length, 100))}...");
-        //    }
-        //}
-
+    private static void StoreThreads(List<Thread> allThreads, string filename)
+    {
         // 1) Configure JSON options (pretty-print, handle all Unicode, etc.)
         var options = new JsonSerializerOptions
         {
@@ -95,7 +101,44 @@ class Program
         string json = JsonSerializer.Serialize(allThreads, options);
 
         // 3) Write to file
-        File.WriteAllText("threads.json", json);
+        File.WriteAllText(filename, json);
+    }
+
+    /// <summary>
+    /// Runs a query against the user's mailbox and returns a list of our custom Thread objects.
+    /// </summary>
+    private static List<Thread> FetchThreadsByQuery(GmailService service, string query)
+    {
+        var allThreads = new List<Thread>();
+
+        // 1) List thread IDs using a minimal format
+        var listRequest = service.Users.Threads.List("me");
+        listRequest.Q = query;
+        listRequest.MaxResults = 500;  // 500 is max. If this is not sufficient, use NextPageToken somehow
+        var listResponse = listRequest.Execute();
+
+        if (listResponse.Threads == null)
+            return allThreads; // empty
+
+        Console.WriteLine($"We have {listResponse.Threads.Count()} threads");
+
+        foreach (var threadItem in listResponse.Threads)
+        {
+            Console.Write(".");
+            // 2) Get minimal thread data so we know which messages are in it
+            var threadReq = service.Users.Threads.Get("me", threadItem.Id);
+            threadReq.Format = UsersResource.ThreadsResource.GetRequest.FormatEnum.Minimal;
+            var threadData = threadReq.Execute();
+
+            if (threadData.Messages == null)
+                continue;
+
+            // 3) For each message, fetch RAW, parse with MimeKit, build our custom object
+            var customThread = BuildThreadFromMessages(service, threadData.Messages, threadData.Id);
+            allThreads.Add(customThread);
+        }
+
+        return allThreads;
     }
 
     /// <summary>
@@ -104,14 +147,15 @@ class Program
     /// </summary>
     private static Thread BuildThreadFromMessages(
         GmailService service,
-        IList<Message> gmailMessages)
+        IList<Message> gmailMessages,
+        string threadId)
     {
         // We'll parse the first message to get the "thread subject"
         var firstMessageId = gmailMessages.First().Id;
         MimeMessage firstParsed = GetRawMimeMessage(service, firstMessageId);
         var threadSubject = firstParsed?.Subject ?? "(No Subject)";
 
-        var customThread = new Thread { Subject = threadSubject };
+        var customThread = new Thread { Subject = threadSubject, ThreadId = threadId };
 
         // Now parse each message in the thread
         foreach (var gm in gmailMessages)
