@@ -177,15 +177,19 @@ class Program
                 textBody = StripHtmlTags(mimeMsg.HtmlBody);
             }
 
-            // odfiltruje email na ktery se odpovida
-            var bodyWithoutReply = EmailReplyParser.EmailReplyParser.ParseReply(textBody);
+            string result = string.Empty;
+            if (textBody != null)
+            {
+                // odfiltruje email na ktery se odpovida
+                var bodyWithoutReply = EmailReplyParser.EmailReplyParser.ParseReply(textBody);
 
-            // odfiltruje radek "Dne čt 3. 4. 2025 8:48 uživatel Ilona Šulová <sulovai@pokrok.cz> napsal:"
-            string pattern = @"^.*Dne.*uživatel.*napsal.*$";
-            string result = Regex.Replace(bodyWithoutReply, pattern, "", RegexOptions.Multiline);
+                // odfiltruje radek "Dne čt 3. 4. 2025 8:48 uživatel Ilona Šulová <sulovai@pokrok.cz> napsal:"
+                string pattern = @"^.*Dne.*uživatel.*napsal.*$";
+                result = Regex.Replace(bodyWithoutReply, pattern, "", RegexOptions.Multiline);
 
-            // odfiltruje prazdne radky
-            result = Regex.Replace(result, @"^\s+$[\r\n]*", "", RegexOptions.Multiline);
+                // odfiltruje prazdne radky
+                result = Regex.Replace(result, @"^\s+$[\r\n]*", "", RegexOptions.Multiline);
+            }
 
             var email = new Email
             {
