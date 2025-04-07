@@ -5,7 +5,11 @@ using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using HtmlAgilityPack;
 using MimeKit;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Text.Unicode;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace GmailDownloader;
 
@@ -67,17 +71,31 @@ class Program
 
         Console.WriteLine($"Fetched {allThreads.Count} threads.");
 
-        // 5) Demo output
-        if (allThreads.Count > 0)
+        //// 5) Demo output
+        //if (allThreads.Count > 0)
+        //{
+        //    var firstThread = allThreads[0];
+        //    Console.WriteLine("First thread subject: " + firstThread.Subject);
+        //    foreach (var email in firstThread.Emails)
+        //    {
+        //        Console.WriteLine($"    From: {email.From}, To: {email.To}, Time: {email.Timestamp}");
+        //        Console.WriteLine($"    Body snippet: {email.Body.Substring(0, Math.Min(email.Body.Length, 100))}...");
+        //    }
+        //}
+
+        // 1) Configure JSON options (pretty-print, handle all Unicode, etc.)
+        var options = new JsonSerializerOptions
         {
-            var firstThread = allThreads[0];
-            Console.WriteLine("First thread subject: " + firstThread.Subject);
-            foreach (var email in firstThread.Emails)
-            {
-                Console.WriteLine($"    From: {email.From}, To: {email.To}, Time: {email.Timestamp}");
-                Console.WriteLine($"    Body snippet: {email.Body.Substring(0, Math.Min(email.Body.Length, 100))}...");
-            }
-        }
+            WriteIndented = true,
+            // Encoder that can handle most Unicode characters without escaping them
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
+        };
+
+        // 2) Serialize to a string
+        string json = JsonSerializer.Serialize(allThreads, options);
+
+        // 3) Write to file
+        File.WriteAllText("threads.json", json);
     }
 
     /// <summary>
@@ -114,12 +132,22 @@ class Program
                 textBody = StripHtmlTags(mimeMsg.HtmlBody);
             }
 
+            // odfiltruje email na ktery se odpovida
+            var bodyWithoutReply = EmailReplyParser.EmailReplyParser.ParseReply(textBody);
+
+            // odfiltruje radek "Dne čt 3. 4. 2025 8:48 uživatel Ilona Šulová <sulovai@pokrok.cz> napsal:"
+            string pattern = @"^.*Dne.*uživatel.*napsal.*$";
+            string result = Regex.Replace(bodyWithoutReply, pattern, "", RegexOptions.Multiline);
+
+            // odfiltruje prazdne radky
+            result = Regex.Replace(result, @"^\s+$[\r\n]*", "", RegexOptions.Multiline);
+
             var email = new Email
             {
                 From = fromAddress,
                 To = toAddress,
                 Timestamp = timestamp,
-                Body = textBody ?? string.Empty
+                Body = result ?? string.Empty
             };
 
             customThread.Emails.Add(email);
