@@ -15,6 +15,10 @@
     <PackageReference Include="MimeKit" Version="4.11.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Contracts\Contracts.csproj" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<None Update="credentials.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

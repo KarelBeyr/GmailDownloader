@@ -1,7 +1,6 @@
-﻿
-namespace GmailDownloader;
+namespace GmailDownloader.Contracts;
 
-public class Thread
+public class MailThread
 {
     public string Subject { get; set; }
     public List<Email> Emails { get; set; } = new List<Email>();
@@ -14,4 +13,10 @@ public class Email
     public string To { get; set; }
     public DateTime Timestamp { get; set; }
     public string Body { get; set; }
+}
+
+public class EmbeddedEmail
+{
+    public string ThreadId { get; set; }
+    public string VectorBase64 { get; set; }
 }

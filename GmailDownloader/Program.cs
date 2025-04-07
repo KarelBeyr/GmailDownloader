@@ -9,7 +9,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
-using static System.Net.Mime.MediaTypeNames;
+
+using GmailDownloader.Contracts;
 
 namespace GmailDownloader;
 
@@ -70,7 +71,7 @@ class Program
                 Console.WriteLine($"Processing {year}-{month:00} with query: {query}");
 
                 // 3b) Retrieve threads for this month
-                List<Thread> monthlyThreads = FetchThreadsByQuery(service, query);
+                List<MailThread> monthlyThreads = FetchThreadsByQuery(service, query);
 
                 // 3c) If we got results, serialize them to threads_YEAR-MONTH.json
                 if (monthlyThreads.Any())
@@ -87,7 +88,7 @@ class Program
         }
     }
 
-    private static void StoreThreads(List<Thread> allThreads, string filename)
+    private static void StoreThreads(List<MailThread> allThreads, string filename)
     {
         // 1) Configure JSON options (pretty-print, handle all Unicode, etc.)
         var options = new JsonSerializerOptions
@@ -107,9 +108,9 @@ class Program
     /// <summary>
     /// Runs a query against the user's mailbox and returns a list of our custom Thread objects.
     /// </summary>
-    private static List<Thread> FetchThreadsByQuery(GmailService service, string query)
+    private static List<MailThread> FetchThreadsByQuery(GmailService service, string query)
     {
-        var allThreads = new List<Thread>();
+        var allThreads = new List<MailThread>();
 
         // 1) List thread IDs using a minimal format
         var listRequest = service.Users.Threads.List("me");
@@ -145,7 +146,7 @@ class Program
     /// For each Gmail message reference in the thread, fetch it in RAW format, 
     /// parse with MimeKit, and build our custom Thread/Email objects.
     /// </summary>
-    private static Thread BuildThreadFromMessages(
+    private static MailThread BuildThreadFromMessages(
         GmailService service,
         IList<Message> gmailMessages,
         string threadId)
@@ -155,7 +156,7 @@ class Program
         MimeMessage firstParsed = GetRawMimeMessage(service, firstMessageId);
         var threadSubject = firstParsed?.Subject ?? "(No Subject)";
 
-        var customThread = new Thread { Subject = threadSubject, ThreadId = threadId };
+        var customThread = new MailThread { Subject = threadSubject, ThreadId = threadId };
 
         // Now parse each message in the thread
         foreach (var gm in gmailMessages)
