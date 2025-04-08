@@ -7,10 +7,10 @@ The pipeline works like this:
 4. API (C#): Simple REST API app that has single page where you can enter text, then it would call python script to embed it and then it would find three most similar emails and render links to them
 
 How to setup python script (https://chatgpt.com/c/67f39695-4770-8013-81c5-d5f948151712)
-pip install sentence-transformers transformers accelerate huggingface-hub
-// optional pip install --upgrade sentence-transformers transformers accelerate huggingface-hub
-python embedder.Python
-test_embedder.bat
+1. pip install sentence-transformers transformers accelerate huggingface-hub
+2. // optional pip install --upgrade sentence-transformers transformers accelerate huggingface-hub
+3. python embedder.Python
+4. test_embedder.bat
 
 How to setup GmailDownloader (https://chatgpt.com/c/67f2dc66-26b0-8013-a3c6-72ea919ce9f2)
 1. Set the project as startup in visual studio and run it
